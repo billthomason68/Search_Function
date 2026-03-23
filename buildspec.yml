@@ -1,0 +1,14 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      python: 3.10
+  build:
+    commands:
+      - aws cloudformation package --template-file search-function.yaml --s3-bucket wbt-search-engine-artifacts --output-template-file search-output.yaml
+
+artifacts:
+  type: zip
+  files:
+    - search-function.yaml
+    - search-output.yaml
