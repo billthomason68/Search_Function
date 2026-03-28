@@ -1,3 +1,4 @@
+import os
 import boto3
 import requests
 from requests_aws4auth import AWS4Auth
@@ -5,13 +6,22 @@ import base64
 import urllib.parse
 import json
 
-region = 'ap-northeast-1'
-service = 'es'
+opensearch_region = os.environ.get("OPENSEARCH_REGION", "us-east-1")
+service = "es"
 credentials = boto3.Session().get_credentials()
-awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, region, service, session_token=credentials.token)
-host = 'https://search-mygoogle-74xgfxo3qbqg4mmm5zzt3a3uye.ap-northeast-1.es.amazonaws.com'
-index = 'mygoogle'
-url = host + '/' + index + '/_search'
+awsauth = AWS4Auth(
+    credentials.access_key,
+    credentials.secret_key,
+    opensearch_region,
+    service,
+    session_token=credentials.token,
+)
+host = os.environ.get(
+    "OPENSEARCH_HOST",
+    "https://search-search-engine-domain-y7f2lkl6ec6ycml3zce4ihpl6q.us-east-1.es.amazonaws.com",
+)
+index = os.environ.get("OPENSEARCH_INDEX", "mygoogle")
+url = host + "/" + index + "/_search"
 def get_from_Search(query):
     
     headers = { "Content-Type": "application/json" }
@@ -33,13 +43,15 @@ def get_from_Search(query):
 
 
 def lambda_handler(event, context):
+    response = {
+        "statusCode": 200,
+        "statusDescription": "200 OK",
+        "isBase64Encoded": False,
+        "headers": {"Content-Type": "application/json"},
+    }
     try:
-        print("Event is",event)
-        response = {
-        "statusCode": 200, "statusDescription": "200 OK", "isBase64Encoded": False,
-        "headers": { "Content-Type": "application/json" }
-        }
-        encBodyData = event['body']
+        print("Event is", event)
+        encBodyData = event["body"]
         bodyData = base64.b64decode(encBodyData)
         encFormData = bodyData.decode('utf-8')
         formDict = urllib.parse.parse_qs(encFormData)
@@ -74,9 +86,9 @@ def lambda_handler(event, context):
     
     except Exception as e:
         print("Exception is", str(e))
-        respData = {}
-        respData['status'] = False;
-        respData['message'] = str(e);
-        response['statusCode'] = 500;
-        response['body'] = json.dumps(respData);
-        return response
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "isBase64Encoded": False,
+            "body": json.dumps({"status": False, "message": str(e)}),
+        }

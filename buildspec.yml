@@ -5,6 +5,7 @@ phases:
       python: 3.10
   build:
     commands:
+      - pip install -r requirements.txt -t .
       - aws cloudformation package --template-file search-function.yaml --s3-bucket wbt-search-engine-artifacts --output-template-file search-output.yaml
 
 artifacts:

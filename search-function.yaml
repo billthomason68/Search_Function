@@ -1,14 +1,30 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
-Description: An AWS Serverless Specification template describing your function.
+Transform: AWS::Serverless-2016-10-31
+Description: Search API — queries OpenSearch (same-account Lambda role from Terraform).
+Parameters:
+  LambdaExecutionRoleArn:
+    Type: String
+    Description: Terraform output lambda_role_arn
+    Default: arn:aws:iam::806364133030:role/search-engine-lambda-role
+  OpenSearchEndpoint:
+    Type: String
+    Description: Terraform output opensearch_domain_endpoint (hostname only)
+    Default: search-search-engine-domain-y7f2lkl6ec6ycml3zce4ihpl6q.us-east-1.es.amazonaws.com
+  OpenSearchIndex:
+    Type: String
+    Default: mygoogle
 Resources:
   searchgateway:
-    Type: 'AWS::Serverless::Function'
+    Type: AWS::Serverless::Function
     Properties:
       Handler: lambda_function.lambda_handler
-      Runtime: python3.9
+      Runtime: python3.10
       CodeUri: .
-      Description: ''
       MemorySize: 128
       Timeout: 300
-      Role: 'arn:aws:iam::844028273225:role/lambda_s3'
+      Role: !Ref LambdaExecutionRoleArn
+      Environment:
+        Variables:
+          OPENSEARCH_HOST: !Sub 'https://${OpenSearchEndpoint}'
+          OPENSEARCH_INDEX: !Ref OpenSearchIndex
+          OPENSEARCH_REGION: us-east-1
